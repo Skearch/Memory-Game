@@ -1,8 +1,15 @@
 import pygame
 import random
+import os
+
+current_dir = os.path.dirname(__file__)
+background_image_path = os.path.join(current_dir, "background.png")
+box_image_path = os.path.join(current_dir, "box.png")
+font_path = os.path.join(current_dir, "Gamer.ttf")
+sound_path = os.path.join(current_dir, "clicksfx.mp3")
 
 SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
+SCREEN_HEIGHT = 800
 CARD_WIDTH = 100
 CARD_HEIGHT = 100
 ROWS = 4
@@ -11,6 +18,22 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 GREEN = (0, 255, 0)
 GRAY = (200, 200, 200)
+
+pygame.init()
+
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption("Mix & match")
+
+clock = pygame.time.Clock()
+
+background_image = pygame.image.load(background_image_path)
+box_image = pygame.image.load(box_image_path).convert_alpha()
+box_image = pygame.transform.scale(box_image, (CARD_WIDTH, CARD_HEIGHT))
+custom_font = pygame.font.Font(font_path, 57)
+click_sound = pygame.mixer.Sound(sound_path)
+
+numbers = [i for i in range(1, (ROWS * COLS) // 2 + 1)] * 2
+random.shuffle(numbers)
 
 class Node:
     def __init__(self, data):
@@ -31,15 +54,6 @@ class LinkedList:
                 current = current.next
             current.next = new_node
 
-pygame.init()
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Memory Game")
-
-clock = pygame.time.Clock()
-
-numbers = [i for i in range(1, (ROWS * COLS) // 2 + 1)] * 2
-random.shuffle(numbers)
-
 card_values = LinkedList()
 for num in numbers:
     card_values.insert(num)
@@ -55,17 +69,13 @@ for row in range(ROWS):
         card_values.head = card_values.head.next
 
 opened_cards = []
-
 moves = 0
 misses = 0
-
-font = pygame.font.Font(None, 24)
-
 game_over = False
 
 running = True
 while running:
-    screen.fill(WHITE)
+    screen.blit(background_image, (0, 0))
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -74,6 +84,8 @@ while running:
         if not game_over and event.type == pygame.MOUSEBUTTONDOWN:
             for i, (rect, flipped, value) in enumerate(cards):
                 if rect.collidepoint(event.pos) and not flipped:
+                    click_sound.play()
+
                     if len(opened_cards) < 3:
                         cards[i] = (rect, True, value)
                         opened_cards.append((i, value))
@@ -91,27 +103,27 @@ while running:
 
     for rect, flipped, value in cards:
         if flipped:
-            pygame.draw.rect(screen, GRAY, rect)
-            text = font.render(str(value), True, BLACK)
-            text_rect = text.get_rect(center=rect.center)
-            screen.blit(text, text_rect)
+            number_box = os.path.join(current_dir, str(value) + ".png")
+            number_box = pygame.image.load(number_box).convert_alpha()
+            number_box = pygame.transform.scale(number_box, (CARD_WIDTH, CARD_HEIGHT))
+            screen.blit(number_box, rect)
         else:
-            pygame.draw.rect(screen, BLACK, rect)
+            screen.blit(box_image, rect)
 
-    moves_text = font.render(f"Moves: {moves}", True, BLACK)
-    misses_text = font.render(f"Misses: {misses}", True, BLACK)
-    screen.blit(moves_text, (20, SCREEN_HEIGHT - 30))
-    screen.blit(misses_text, (SCREEN_WIDTH - 120, SCREEN_HEIGHT - 30))
+    moves_text = custom_font.render(f"Moves: {moves}", True, WHITE)
+    misses_text = custom_font.render(f"Misses: {misses}", True, WHITE)
+    screen.blit(moves_text, (20, 20))
+    screen.blit(misses_text, (20, 60))
 
     all_opened = all(flipped for _, flipped, _ in cards)
     if all_opened:
         game_over = True
 
     if game_over:
-        game_over_text = font.render("Congratulations! Game Over!", True, GREEN)
-        result_text = font.render(f"You got {misses} misses on {moves} moves!", True, GREEN)
-        screen.blit(game_over_text, (SCREEN_WIDTH // 2 - 150, SCREEN_HEIGHT // 2 - 50))
-        screen.blit(result_text, (SCREEN_WIDTH // 2 - 150, SCREEN_HEIGHT // 2))
+        game_over_text = custom_font.render("Congratulations! Game Over!", True, GREEN)
+        result_text = custom_font.render(f"You got {misses} misses on {moves} moves!", True, GREEN)
+        screen.blit(game_over_text, (SCREEN_WIDTH // 2 , SCREEN_HEIGHT // 2))
+        screen.blit(result_text, (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
 
     pygame.display.flip()
     clock.tick(30)
