@@ -13,7 +13,6 @@ gameover_menu_path = os.path.join(current_dir, "gameover_menu.png")
 difficulty_menu_path = os.path.join(current_dir, "difficulty_menu.png")
 
 #Variables
-game_over = False
 cards_count = 16
 moves = 0
 misses = 0
@@ -52,6 +51,7 @@ retry_fromEnd = pygame.Rect(484, 525, 129, 46)
 DIFFICULTY_hard = pygame.Rect(181, 325, 143, 203)
 DIFFICULTY_medium= pygame.Rect(334, 325, 143, 203)
 DIFFICULTY_easy= pygame.Rect(487, 325, 143, 203)
+menu_fromGame= pygame.Rect(324, 33, 152, 46)
 
 custom_font = pygame.font.Font(font_path, 40)
 click_sound = pygame.mixer.Sound(sound_path)
@@ -95,6 +95,8 @@ def gameover_menu():
     screen.blit(moves_text, moves_text_rect)
     screen.blit(misses_text, misses_text_rect)
 
+current_state = main_menu
+
 def game_menu():
 
     global cards_count
@@ -127,21 +129,28 @@ def game_menu():
             card_values.head = card_values.head.next
 
     opened_cards = []
-    global game_over
     global moves
     global misses
+    global current_state
     moves=0
     misses = 0
     game_over = False
-    
-    while not game_over:
+    game_to_menu = False
+
+    while not game_over:    
         screen.blit(background_image, (0, 0))
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
-            if event.type == pygame.MOUSEBUTTONDOWN:
+
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if menu_fromGame.collidepoint(event.pos):
+                    game_to_menu = True
+                    break
+
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 for i, (rect, flipped, value) in enumerate(cards):
                     if rect.collidepoint(event.pos) and not flipped:
                         click_sound.play()
@@ -178,25 +187,23 @@ def game_menu():
 
         all_opened = all(flipped for _, flipped, _ in cards)
         if all_opened:
-            game_over = True
+            current_state = gameover_menu
             break
-            
+
+        if game_to_menu:
+            current_state = main_menu
+            break
+
         pygame.display.flip()
         clock.tick(30)
 
     return main_menu
-
-current_state = main_menu
 
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
             quit()
-
-        if game_over:
-            game_over = False
-            current_state = gameover_menu
 
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
 
@@ -210,6 +217,10 @@ while True:
                 if DIFFICULTY_easy.collidepoint(event.pos):
                     cards_count = 12
                     current_state = game_menu
+
+            if current_state == game_menu:
+                if menu_fromGame.collidepoint(event.pos):
+                    current_state = main_menu
 
             if current_state == main_menu:
                 if start_button_rect.collidepoint(event.pos):
