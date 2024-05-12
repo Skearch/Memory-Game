@@ -51,7 +51,7 @@ retry_fromEnd = pygame.Rect(484, 525, 129, 46)
 DIFFICULTY_hard = pygame.Rect(181, 325, 143, 203)
 DIFFICULTY_medium= pygame.Rect(334, 325, 143, 203)
 DIFFICULTY_easy= pygame.Rect(487, 325, 143, 203)
-menu_fromGame= pygame.Rect(324, 33, 152, 46)
+menu_fromGame= pygame.Rect(324, 55, 152, 46)
 
 custom_font = pygame.font.Font(font_path, 40)
 click_sound = pygame.mixer.Sound(sound_path)
@@ -182,8 +182,8 @@ def game_menu():
 
         moves_text = custom_font.render(f"Moves: {moves}", True, WHITE)
         misses_text = custom_font.render(f"Misses: {misses}", True, WHITE)
-        screen.blit(moves_text, (20, 20))
-        screen.blit(misses_text, (20, 60))
+        screen.blit(moves_text, (40, 30))
+        screen.blit(misses_text, (40, 80))
 
         all_opened = all(flipped for _, flipped, _ in cards)
         if all_opened:
